@@ -12,10 +12,15 @@ To provision some labs on computer, I don't like to make many vagranfiles and to
 
 ## Requiremnets
 **Linux or MacOS**
+
 git
+
 bash 4
+
 vagrant >= 2.2.9
+
 vagrant plugin install vagrant-hostmanager
+
 ssh
 
 
