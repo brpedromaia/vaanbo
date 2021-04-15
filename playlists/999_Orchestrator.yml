@@ -1,0 +1,17 @@
+name: orchestrator
+provision:
+  provider: virtualbox
+  box: "bento/centos-8"
+  ram: 1024
+  vcpu: 2
+  instances: 
+    - instance_name: orchestrator
+      type: "private" # dhcp / public / private
+      ip: "10.44.44.100" 
+      hd: 12GB
+      command_line:
+        - "sudo yum install -y epel-release"
+        - "sudo yum install -y ansible git"
+        - "sudo wget https://github.com/mikefarah/yq/releases/download/v4.6.3/yq_linux_amd64 -O /usr/bin/yq && chmod +x /usr/bin/yq"
+        - "echo 'export PATH=$PATH:/vagrant/bin'>>/home/vagrant/.bashrc"
+        - "source /home/vagrant/.bashrc;vaanbo ansible apply all"

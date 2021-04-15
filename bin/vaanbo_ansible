@@ -1,0 +1,156 @@
+#!/bin/bash
+
+### GLOBAL VARS
+current_path="$( cd "$( dirname "$0" )" && pwd )"
+vaanbo_path="$current_path/../.vaanbo"
+playbooks_folder="$vaanbo_path/playbooks"
+playlist_folder="$current_path/../playlists/"
+###
+
+function getItemYml
+{
+    local item=`yq e -N ".$1" $2 2>/dev/null`
+    echo $item
+}
+
+function getPlaybooksList
+{   
+    getPlaybookInfo '' 'name'
+}
+
+function getPlaybookInfo
+{   
+    name=$1
+    ymlItem=$2
+
+    pList=(`grep -Ril "config" $playlist_folder`)
+    for item in "${pList[@]}" ; do
+        yml_name=$(getItemYml "name" $item)
+        itemName=$(getItemYml $ymlItem $item)
+        if [ "$ymlItem" == "" ];then
+            echo $itemName
+        elif [ "$3" == "" ] && [ "$name" == "$yml_name" ];then
+            echo $item
+            break
+        else
+            itemSearch=$(getItemYml $ymlItem $item)
+            echo $itemSearch| sed 's/null//g'
+        fi
+
+    done
+}
+
+function cloneRepository
+{
+    local source=$1    
+    (cd $playbooks_folder;git clone $source)
+}
+
+function runPlaybookWithTag
+{
+    local config_yml=$1
+    local playbook=$2
+    local tags=$3
+
+    local repository_source=$(getPlaybookInfo "$config_yml" "config.repository")
+    local repository_folder="$playbooks_folder/${repository_source##*/}"
+
+    ansible_ssh_config="--extra-vars='ansible_ssh_private_key_file=/$vaanbo_path/ssh/vagrant.pem'"
+
+    if [ ! -d "/home/vagrant" ];then ansible_ssh_config="";fi
+    
+    if [ ! -d "$repository_folder" ];then
+        mkdir -p $playbooks_folder
+        cloneRepository "$repository_source"
+    fi
+
+    local run_playbook="(cd $repository_folder;sudo ansible-playbook playbooks/$playbook.yml $tags $ansible_ssh_config)"
+
+    eval "$run_playbook"
+}
+
+function runAnsiblePlaybook
+{
+    local playbook=$1
+    local config_yml=$(getPlaybookInfo "$playbook" "na")
+    if [ ! -f "$config_yml" ];then echo "Playbook not found on playlist folder: $playbook";exit;fi
+   
+    local playbook_playbooks=$(getPlaybookInfo "$config_yml" 'config.playbooks|keys')
+    local playbook_list=($(echo -e "${playbook_playbooks//\-/}"))
+
+    for playbook_item in "${playbook_list[@]}" ; do
+        local playbook_tags=$(getPlaybookInfo "$config_yml" "config.playbooks.$playbook_item.tags")
+        local playbook_tags_st=""
+        if [ "$playbook_tags" != "" ];then
+            playbook_tags_st=$(echo -e "--tags${playbook_tags//\-/}")
+        fi
+        runPlaybookWithTag "$repository_folder" "$playbook_item" "$playbook_tags_st"
+
+    done
+}
+function runAnsiblePlaybooks
+{
+    local playbook_name_list=($1)
+
+    for playbook_name in "${playbook_name_list[@]}" ; do
+
+        if [[ "$playbook_name" == *".yml"* ]]; then
+             local transform=${playbook_name%%.yml*}
+             transform=${transform#*_}
+             playbook_name="${transform,,}"
+        fi
+
+        runAnsiblePlaybook $playbook_name
+        
+    done
+}
+
+function runAnsiblePlaybookByName
+{
+    local playbook_name=$1
+    local playbook_name_list=()
+    case "$playbook_name" in
+        "all")
+            playbook_name_list=($(getPlaybooksList))
+        ;;
+        *)
+            playbook_name_list=($playbook_name)
+        ;;
+  esac
+
+  runAnsiblePlaybooks "${playbook_name_list[@]}"
+}
+function help
+{
+   printf "Usage: $0 [OPTIONS] COMMAND"
+   printf "\nOptions:"
+   printf "\n-pl=<STRING>, --playlist=<STRING>          Define specific playlist folder"
+   printf "\n-pb, --playbooks=<STRING>                  Define specific playbooks folder"
+   printf "\n\nCommand: (Required)"
+   printf "\napply                                      Applay playbook by name"
+   printf "\nhelp                                       Print this usage."
+   printf "\nversion                                    Print version information and quit"
+   printf "\n"
+}
+
+cmd="help"
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -pl=*|--playlist=*)
+        playlist_folder="${1#*=}"
+    ;;
+    -pb=*|--playbooks=*)
+        playbooks_folder="${1#*=}"
+    ;;
+    apply)
+        cmd="runAnsiblePlaybookByName $2"
+    ;;
+    version)
+        echo "vaanbo_vagrant v1.0";exit
+    ;;
+  esac
+  shift
+done
+
+$cmd

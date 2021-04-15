@@ -1,0 +1,32 @@
+#!/bin/bash
+
+script_folder="$( cd "$( dirname "$0" )" && pwd )"
+
+function help
+{
+   printf "\nUsage: $0 [OPTIONS] COMMAND"
+   printf "\nOptions:"
+   printf "\nansible                                    To use ansible features"
+   printf "\nvagrant                                    To use vagrant features"
+   printf "\nCommand: (Required)"
+   printf "\nhelp                                       Print this usage."
+   printf "\nversion                                    Print version information and quit"
+   printf "\n"
+}
+
+args=$@
+while [ $# -gt 0 ]; do
+  case "$1" in
+    ansible)
+        source $script_folder/vaanbo_ansible $args
+        exit
+    ;;
+   vagrant)
+        source $script_folder/vaanbo_vagrant $args
+    ;;
+    version)
+        echo "vaanbo v1.0"
+    ;;
+  esac
+  shift
+done

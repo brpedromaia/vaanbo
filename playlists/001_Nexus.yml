@@ -1,0 +1,17 @@
+name: nexus
+provision:
+  provider: virtualbox
+  box: "bento/centos-8"
+  ram: 2048
+  vcpu: 2
+  instances: 
+    - instance_name: nexus-master
+      type: "private" # dhcp / public / private
+      ip: "10.44.44.103" 
+      hd: 12GB
+config:
+  repository: https://github.com/brpedromaia/nexus-ansible-roles
+  playbooks: 
+    setup:
+      tags:
+        - install
