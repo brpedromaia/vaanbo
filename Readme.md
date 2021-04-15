@@ -60,7 +60,7 @@ MIT
 ## Running
 
 ```bash
-git clone repository
+git clone https://github.com/brpedromaia/vaanbo.git
 cd vagrant-ansible-bootstrap
 #Execute the command bellow to get help information
 bash bin/vaanbo
