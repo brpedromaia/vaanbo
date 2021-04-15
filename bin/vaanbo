@@ -13,7 +13,6 @@ function help
    printf "\nversion                                    Print version information and quit"
    printf "\n"
 }
-echo teste
 
 args=$@
 while [ $# -gt 0 ]; do
