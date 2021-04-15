@@ -13,6 +13,7 @@ function help
    printf "\nversion                                    Print version information and quit"
    printf "\n"
 }
+echo teste
 
 args=$@
 while [ $# -gt 0 ]; do
@@ -23,10 +24,14 @@ while [ $# -gt 0 ]; do
     ;;
    vagrant)
         source $script_folder/vaanbo_vagrant $args
+        exit
     ;;
     version)
         echo "vaanbo v1.0"
+        exit
     ;;
   esac
   shift
 done
+
+help
