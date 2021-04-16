@@ -35,11 +35,14 @@ function genProvisionPlan
 
 function provision 
 {
+    arg=$1
+    machine=$1
+    if [ "$arg" == "all" ];then machine="";fi
     mkdir -p $vaanbo_path
     applySshKeys
     genProvisionPlan
-    vagrant destroy -f
-    vagrant up
+    vagrant up $machine
+    vagrant ssh orchestrator -c  "source /home/vagrant/.bashrc;vaanbo ansible apply $arg"
 }
 
 function help
