@@ -1,0 +1,17 @@
+name: gitlab
+provision:
+  provider: virtualbox
+  box: "bento/centos-8"
+  ram: 2048
+  vcpu: 2
+  instances: 
+    - instance_name: gitlab-master
+      type: "private" # dhcp / public / private
+      ip: "10.44.44.104" 
+      hd: 12GB
+config:
+  repository: https://github.com/brpedromaia/gitlab-ansible-roles
+  playbooks: 
+    setup:
+      tags:
+        - install
