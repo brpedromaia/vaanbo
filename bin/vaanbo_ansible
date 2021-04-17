@@ -15,28 +15,23 @@ function getItemYml
 
 function getPlaybooksList
 {   
-    getPlaybookInfo '' 'name'
+    pList=(`grep -Ril "config" $playlist_folder| sort`)
+    echo ${pList[@]}
 }
 
-function getPlaybookInfo
+function getYmlByName
 {   
     name=$1
     ymlItem=$2
 
-    pList=(`grep -Ril "config" $playlist_folder`)
+    pList=($(getPlaybooksList))
     for item in "${pList[@]}" ; do
         yml_name=$(getItemYml "name" $item)
         itemName=$(getItemYml $ymlItem $item)
-        if [ "$ymlItem" == "" ];then
-            echo $itemName
-        elif [ "$3" == "" ] && [ "$name" == "$yml_name" ];then
+        if [ "$name" == "$yml_name" ];then
             echo $item
             break
-        else
-            itemSearch=$(getItemYml $ymlItem $item)
-            echo $itemSearch| sed 's/null//g'
         fi
-
     done
 }
 
@@ -52,45 +47,47 @@ function runPlaybookWithTag
     local playbook=$2
     local tags=$3
 
-    local repository_source=$(getPlaybookInfo "$config_yml" "config.repository")
+    local repository_source=$(getItemYml "config.repository" "$config_yml" )
     local repository_folder="$playbooks_folder/${repository_source##*/}"
 
     ansible_ssh_config="--extra-vars='ansible_ssh_private_key_file=/$vaanbo_path/ssh/vagrant.pem'"
 
-    if [ ! -d "/home/vagrant" ];then ansible_ssh_config="";fi
-    
+    if [ ! -d /home/vagrant ];then ansible_ssh_config="";fi
+
     if [ ! -d "$repository_folder" ];then
         mkdir -p $playbooks_folder
         cloneRepository "$repository_source"
     fi
 
     local run_playbook="(cd $repository_folder;sudo ansible-playbook playbooks/$playbook.yml $tags $ansible_ssh_config)"
-
+    echo $run_playbook
     eval "$run_playbook"
 }
 
 function runAnsiblePlaybook
 {
     local playbook=$1
-    local config_yml=$(getPlaybookInfo "$playbook" "na")
-    if [ ! -f "$config_yml" ];then echo "Playbook not found on playlist folder: $playbook";exit;fi
-   
-    local playbook_playbooks=$(getPlaybookInfo "$config_yml" 'config.playbooks|keys')
+    local config_yml=$(getYmlByName "$playbook")
+    config_yml=$(echo $config_yml| sed 's/\n//g')
+
+    if [ ! -f $config_yml ];then echo "Playbook not found on playlist folder: $playbook";exit;fi
+    
+    local playbook_playbooks=$(getItemYml "config.playbooks|keys" "$config_yml" )
     local playbook_list=($(echo -e "${playbook_playbooks//\-/}"))
 
     for playbook_item in "${playbook_list[@]}" ; do
-        local playbook_tags=$(getPlaybookInfo "$config_yml" "config.playbooks.$playbook_item.tags")
+        local playbook_tags=$(getItemYml "config.playbooks.$playbook_item.tags" "$config_yml")
         local playbook_tags_st=""
         if [ "$playbook_tags" != "" ];then
             playbook_tags_st=$(echo -e "--tags${playbook_tags//\-/}")
         fi
-        runPlaybookWithTag "$repository_folder" "$playbook_item" "$playbook_tags_st"
+        runPlaybookWithTag "$config_yml" "$playbook_item" "$playbook_tags_st"
 
     done
 }
 function runAnsiblePlaybooks
 {
-    local playbook_name_list=($1)
+    local playbook_name_list=($@)
 
     for playbook_name in "${playbook_name_list[@]}" ; do
 
@@ -116,7 +113,7 @@ function runAnsiblePlaybookByName
         *)
             playbook_name_list=($playbook_name)
         ;;
-  esac
+    esac
 
   runAnsiblePlaybooks "${playbook_name_list[@]}"
 }
