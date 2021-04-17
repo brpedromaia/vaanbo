@@ -62,8 +62,27 @@ MIT
 ```bash
 git clone https://github.com/brpedromaia/vaanbo.git
 cd vaanbo
-#Execute the command bellow to get help information
+
+#1. Execute the commands bellow to get the help information.
 bash bin/vaanbo
+bash bin/vaanbo vagrant
+bash bin/vaanbo ansible
+
+#2. Execute the command bellow to provision the nexus example using playlist folder.
+bash bin/vaanbo vagrant provision nexus
+
+
+#3. Execute the command bellow after command "2." to starts ansible plabook to configure the nexus example using playlist folder.
+bash bin/vaanbo vagrant config nexus
+
+#4. Execute the command bellow to destroy after command "2." or "3." the nexus example virtual machine.
+bash bin/vaanbo vagrant destroy nexus
+
+
+#Execute the command bellow to Provision and Config in one command line the nexus example using playlist folder.
+bash bin/vaanbo vagrant pc nexus
+
+
 ```
 
 
