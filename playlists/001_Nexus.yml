@@ -5,7 +5,7 @@ provision:
   ram: 2048
   vcpu: 2
   instances: 
-    - instance_name: nexus-master
+    - instance_name: nexus
       type: "private" # dhcp / public / private
       ip: "10.44.44.103" 
       hd: 12GB
