@@ -33,16 +33,39 @@ function genProvisionPlan
     ls -1 $playlist_path| sort | sed 's/^/- /g' >$provision_plan_path/provision-plan.yml
 }
 
+function config 
+{
+    vagrant hostmanager
+    local arg=$1
+    local machine=$1
+    if [ "$arg" == "all" ];then machine="";fi
+    vagrant ssh orchestrator -c "source /home/vagrant/.bashrc;vaanbo ansible apply $arg"
+}
+
 function provision 
 {
-    arg=$1
-    machine=$1
+    local arg=$1
+    local machine=$1
     if [ "$arg" == "all" ];then machine="";fi
     mkdir -p $vaanbo_path
     applySshKeys
     genProvisionPlan
     vagrant up $machine
-    vagrant ssh orchestrator -c  "source /home/vagrant/.bashrc;vaanbo ansible apply $arg"
+}
+
+function reprovision 
+{
+    local arg=$1
+    destroy $arg
+    provision $arg
+}
+
+function destroy 
+{
+    local arg=$1
+    local machine=$1
+    if [ "$arg" == "all" ];then machine="";fi
+    vagrant destroy -f $machine
 }
 
 function help
@@ -56,6 +79,8 @@ function help
    printf "\nreprovision                                To reprovision machines from playlist on virtualbox"
    printf "\ndestroy                                    To destroy machines from playlist on virtualbox"
    printf "\nopen                                       To access virtual machine by name"
+   printf "\nconfig                                     To run playbook on vaanbo out of virtual machine"
+   printf "\npc                                         To provision and run playbook automatically"
    printf "\nhelp                                       Print this usage."
    printf "\nversion                                    Print version information and quit"
    printf "\n"
@@ -73,20 +98,25 @@ while [ $# -gt 0 ]; do
     version)
         echo "vaanbo_vagrant v1.0";exit
     ;;
+    config)
+        cmd="$1 $2"
+    ;;
+    pc)
+        provision $2
+        cmd="config $2"
+    ;;
     provision)
-        cmd="$1"
+        cmd="$1 $2"
     ;;
     open)
         vagrant ssh $2
         exit
     ;;
     destroy)
-        vagrant destroy -f
-        exit
+        cmd="$1 $2"
     ;;
     reprovision)
-        vagrant destroy -f
-        cmd="provision"
+        cmd="$1 $2"
     ;;
   esac
   shift
