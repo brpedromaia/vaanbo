@@ -5,7 +5,7 @@ provision:
   ram: 2048
   vcpu: 2
   instances: 
-    - instance_name: gitlab-master
+    - instance_name: gitlab
       type: "private" # dhcp / public / private
       ip: "10.44.44.104" 
       hd: 12GB
