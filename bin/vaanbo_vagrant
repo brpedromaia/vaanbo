@@ -70,7 +70,7 @@ function destroy
 
 function help
 {
-   printf "\nUsage: $0 [OPTIONS] COMMAND"
+   printf "\nUsage: $0 [OPTIONS] COMMAND name"
    printf "\nOptions:"
    printf "\n-pl=<STRING>, --playlist=<STRING>          Define provision playlist folder"
    printf "\n-gssh, --generatessh                       Force sshkeys regeneration"
@@ -83,6 +83,8 @@ function help
    printf "\npc                                         To provision and run playbook automatically"
    printf "\nhelp                                       Print this usage."
    printf "\nversion                                    Print version information and quit"
+   printf "\nNAME:"
+   printf "\nfrom yml name for specific resource or all to use all resources"
    printf "\n"
 }
 
